@@ -55,20 +55,18 @@ namespace MDP
         public Dictionary<string, double>[][,] transitionMatrix;
         public Dictionary<string, double>[] ActionProbability;
         public double[] Jest;
-        public Dictionary<string, string> policy;
         #endregion
 
 
         #region Constructor initialization
-        public MDP(int Numstates, int Numactions,double Gamma)
+        public MDP(int numstates, int numactions,double gamma)
         {
-            numstates = Numstates;
-            numactions = Numactions;
-            gamma = Gamma;
+            this.numstates = numstates;
+            this.numactions = numactions;
+            this.gamma = gamma;
             StateDict = new Dictionary<string, double>();
             transitionMatrix = new Dictionary<string, double>[numactions][,];
             ActionProbability = new Dictionary<string, double>[numactions];
-            policy = new Dictionary<string, string>();
             Jest = new double[numstates];
             for (int i = 0; i < numactions; i++)
             {
