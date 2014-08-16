@@ -59,7 +59,7 @@ namespace MDP
 
 
         #region Constructor initialization
-        public MDP(int numstates, int numactions,double gamma)
+        public MDP(int numstates, int numactions, double gamma)
         {
             this.numstates = numstates;
             this.numactions = numactions;
@@ -81,34 +81,61 @@ namespace MDP
         {
             string input;
             string[] inputlines;
-           
-            
-            var sr = new StreamReader(file);
-            input = sr.ReadToEnd();
-            inputlines = input.Split('\n');
-            foreach (var item in inputlines)
+
+            try
             {
-                IEnumerable<string> sequence = Regex.Split(item, @" ").Take(2);
-                StateDict.Add(sequence.First(),Convert.ToDouble(sequence.ElementAt(1)));
-
-                //get the states, actions and the transition probabilities
-                
-                MatchCollection mc = Regex.Matches(item, @"[a-z][1-9][0-9]?|(\d*\.+\d+)");
-                string[] matches = new string[mc.Count];
-                int i=0;
-                foreach (Match m in mc)
+                var sr = new StreamReader(file);
+                input = sr.ReadToEnd();
+                inputlines = input.Split('\n');
+                foreach (var item in inputlines)
                 {
-                    matches[i++] = m.Value;
+                    IEnumerable<string> sequence = Regex.Split(item, @" ").Take(2);
+                    StateDict.Add(sequence.First(), Convert.ToDouble(sequence.ElementAt(1)));
+
+                    //get the states, actions and the transition probabilities
+
+                    MatchCollection mc = Regex.Matches(item, @"[a-z][1-9]([0-9]?)*|(\d*\.+\d+)|\d+");
+                    string[] matches = new string[mc.Count];
+                    int i = 0;
+                    foreach (Match m in mc)
+                    {
+                        matches[i++] = m.Value;
+                        
+                    }
+
+                    //store each mapping of actions to its probability in the corresponding state transition element 
+                    for (i = 2; i < matches.Length; i += 3)
+                    {
+
+                        ActionProbability[Convert.ToInt32(matches[i].Substring(1)) - 1] = new Dictionary<string, double>() { { matches[i], Convert.ToDouble(matches[i + 2]) } };
+
+                        transitionMatrix[Convert.ToInt32(matches[i].Substring(1)) - 1][Convert.ToInt32(matches[0].Substring(1)) - 1, Convert.ToInt32(matches[i + 1].Substring(1)) - 1] = ActionProbability[Convert.ToInt32(matches[i].Substring(1)) - 1];
+
+                    }
+
                 }
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine("Error: " + ex + "\n\nInput file not found: Check if the file name is correct and if the file is present in the same folder as the executable file. \nexitting..");
+                throw;
+            }
+            catch (FormatException ex)
+            {
 
-                //store each mapping of actions to its probability in the corresponding state transition element 
-                for (i = 1; i < matches.Length; i+=3)
-                {
-                    ActionProbability[(int)(matches[i][1]-'0')-1] = new Dictionary<string,double>(){{matches[i], Convert.ToDouble(matches[i + 2])}};
-
-                    transitionMatrix[((int)(matches[i][1] - '0') - 1)][Convert.ToInt32(matches[0].Substring(1)) - 1,Convert.ToInt32(matches[i + 1].Substring(1)) - 1] = ActionProbability[(int)(matches[i][1] - '0') - 1];
-                
-                }                          }
+                Console.WriteLine("Error: " + ex + "\n\nThe input file has not been provided in the expected format. \nexitting..");
+                throw;
+            }
+            catch(IndexOutOfRangeException ex)
+            {
+                Console.WriteLine("Error: " + ex + "\n\n Out of range exception error: Check if the number of states/actions and other parameters match the ones given as parameters. \nexitting..");
+                throw;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("Error: " + ex + "\n\nA general exception has been caught. Try rerunning the program . \n exitting");
+                throw;
+            }
 
         }
 
@@ -118,11 +145,11 @@ namespace MDP
         {
             for (int i = 0; i < numstates; i++)
             {
-                
-                    Jest[i] = 0.0;
+
+                Jest[i] = 0.0;
             }
-            
-            
+
+
 
         }
 
@@ -196,23 +223,40 @@ namespace MDP
                 }
             }
         }
+
+
         static void Main(string[] args)
         {
-            
+
             Console.WriteLine("Enter number of states[space] number of actions[space] input file[space] and discount factor(gamma)");
             string[] arguments = Regex.Split(Console.ReadLine(), @" ");
-            //string input = arguments[2];
-           // MDP mdp = new MDP(Convert.ToInt32(arguments[0]), Convert.ToInt32(arguments[1]),Convert.ToDouble(arguments[3]));
+            try
+            {
+                string input = arguments[2];
+                MDP mdp = new MDP(Convert.ToInt32(arguments[0]), Convert.ToInt32(arguments[1]), Convert.ToDouble(arguments[3]));
 
-            string input = @"c:\users\ap\documents\visual studio 2013\Projects\MDP\MDP\test2-win.in";
-            MDP mdp = new MDP(10, 3, .9);
-            mdp.read_input(input);
-            mdp.init();
-            mdp.value_iter();
+                //string input = @"c:\users\ap\documents\visual studio 2013\Projects\MDP\MDP\test2-wi.in";
+                //MDP mdp = new MDP(10,4, .9);
+                mdp.read_input(input);
+                mdp.init();
+                mdp.value_iter();
+            }
+            catch(IndexOutOfRangeException ex)
+            {
+                Console.WriteLine("Error: "  + ex+ "\n\n Check if all the 4 parameters were given. Rerun and try giving the 4 parameters.\n exitting...");
+                throw;
+            }
+            catch (FormatException ex)
+            {
+
+                Console.WriteLine("Error: " + ex + "\n\n The input arguments have not been provided in the expected format,Rerun and try giving the 4 parameters in correct format.\n exitting... ");
+                throw;
+            }
+            
             Console.WriteLine("\n Press any key to continue...");
             Console.ReadKey();
         }
-  
-            
+
+
     }
 }
